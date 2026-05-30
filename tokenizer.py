@@ -1,12 +1,12 @@
+#!/usr/bin/env python
 class BasicTokenizer:
     def __init__(self):
-        #initialize dictionary of token id to bytes
         self.vocab = {i: bytes([i]) for i in range(256)}
-        #store pair to tokenid mapping, in order to decode later 
         self.merges = {}
 
     def train(self, text, vocab_size):
-        #encode input text into UTF-8 
+        """Train the tokenizer on the given text."""
+        #encode text into UTF-8 
         tokens = list(text.encode("UTF-8"))
 
         #add new token IDs to vocab until vocab size is met
@@ -24,29 +24,39 @@ class BasicTokenizer:
             pairofinterest = max(paircounts, key=paircounts.get)
             newtokenid = 256 + i
 
-            self.merges[pairofinterest] = newtokenid
-            self.vocab[newtokenid] = self.vocab[pairofinterest[0]] + self.vocab[pairofinterest[1]] 
-
+            self.vocab.append(pairofinterest,newtokenid)
+            
             print("merged ", pairofinterest, " as ", newtokenid)
 
-            #replace byte pairs with new token id
-            ## in tokens where you find this pair, replace it with the newtokenid
-            idx = 0
-            while idx < len(tokens) - 1:
-                if tokens[idx] == pairofinterest[0] and tokens[idx + 1] == pairofinterest[1]:
-                    tokens[idx] = newtokenid
-                    tokens.pop(idx + 1)
-                idx +=1
+        #replace byte pairs with new token id
+    def encode(self, text): 
+        tokens = list(text.encode("UTF-8"))
 
-        print(f"Training tokens compressed from {len(text.encode('UTF-8'))} down to {len(tokens)} tokens!")
-
-    def encode(self, text):
-        """Encode text into token IDs."""
-        raise NotImplementedError()
+        for item in self.merges:
+            i = 0
+            while i < len(tokens) - 1:
+                if (tokens[i], tokens[i+1]) == item:
+                    #replace it with the merge
+                    tokens[i] = self.merges.get(item)
+                    tokens.pop(i+1)
+                    i += 1
+                else:
+                    i += 1
+        return tokens
 
     def decode(self, ids):
-        """Decode token IDs back into text."""
-        raise NotImplementedError()
+        #for each key in the vocab dict, check if the key is in ids, starting at the end of dict
+        string = ""
+        for item in self.vocab:
+            j = 0
+            for j in range(len(ids)): 
+                if ids[j] == item: git
+                    ids[j] = self.vocab.get(item)
+                    string += ids[j].decode("UTF-8")
+                    j += 1
+                else: 
+                    j += 1
+        return string
 
 
 if __name__ == "__main__":
